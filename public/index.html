@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart AI Personal Shopper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-indigo-600 text-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wider cursor-pointer" onclick="init()"><i class="fas fa-robot mr-2"></i>SmartShopper AI</h1>
+            <div id="nav-auth" class="space-x-4">
+                <button onclick="showView('login')" class="hover:text-indigo-200 font-semibold">Login</button>
+                <button onclick="showView('register')" class="bg-white text-indigo-600 px-4 py-1 rounded font-bold hover:bg-indigo-100 transition">Sign Up</button>
+            </div>
+            <div id="nav-user" class="space-x-6 hidden">
+                <button onclick="showView('search')" class="font-semibold hover:text-indigo-200">New Search</button>
+                <button onclick="loadDashboard()" class="font-semibold hover:text-indigo-200">My Dashboard</button>
+                <button onclick="logout()" class="text-red-300 hover:text-red-100"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto p-6 mt-8">
+        
+        <!-- Login View -->
+        <div id="view-login" class="max-w-md mx-auto bg-white rounded-xl shadow-md p-8 hidden">
+            <h2 class="text-3xl font-bold mb-2 text-center text-slate-700">Welcome Back</h2>
+            <p class="text-center text-slate-500 mb-6">Login to access your search history</p>
+            
+            <input type="text" id="login-username" placeholder="Username" class="w-full p-3 mb-4 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition">
+            <input type="password" id="login-password" placeholder="Password" class="w-full p-3 mb-6 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition">
+            
+            <button onclick="handleLogin()" class="w-full bg-indigo-600 text-white p-3 rounded font-bold hover:bg-indigo-700 transition shadow-lg">Login</button>
+            
+            <p class="mt-6 text-center text-sm text-slate-600">
+                Don't have an account yet? 
+                <a href="#" onclick="showView('register')" class="text-indigo-600 font-bold hover:underline">Create one here</a>
+            </p>
+        </div>
+
+        <!-- Register View -->
+        <div id="view-register" class="max-w-md mx-auto bg-white rounded-xl shadow-md p-8 hidden">
+            <h2 class="text-3xl font-bold mb-2 text-center text-slate-700">Create Account</h2>
+            <p class="text-center text-slate-500 mb-6">Join to save your AI shopping analyses</p>
+            
+            <input type="text" id="reg-username" placeholder="Choose a Username" class="w-full p-3 mb-4 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition">
+            <input type="password" id="reg-password" placeholder="Choose a Password" class="w-full p-3 mb-6 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition">
+            
+            <button onclick="handleRegister()" class="w-full bg-emerald-600 text-white p-3 rounded font-bold hover:bg-emerald-700 transition shadow-lg">Register Account</button>
+            
+            <p class="mt-6 text-center text-sm text-slate-600">
+                Already registered? 
+                <a href="#" onclick="showView('login')" class="text-indigo-600 font-bold hover:underline">Login here</a>
+            </p>
+        </div>
+
+        <!-- Search View -->
+        <div id="view-search" class="hidden">
+            <div class="bg-white rounded-xl shadow-md p-8 mb-6 border-t-4 border-indigo-500">
+                <div class="flex items-center gap-4 mb-4">
+                    <input type="text" id="inputQuery" placeholder="Enter Product Name OR paste a URL..." class="flex-1 p-4 border rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <label class="flex items-center space-x-2 text-sm text-slate-600 font-semibold cursor-pointer">
+                        <input type="checkbox" id="isUrl" class="w-4 h-4 text-indigo-600 rounded">
+                        <span>Is URL?</span>
+                    </label>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input type="text" id="productCategory" placeholder="Category (e.g., Smartphone, Laptop)..." class="w-full p-4 border rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <input type="text" id="priceRange" placeholder="Expected Price Range (e.g., 10000-15000)..." class="w-full p-4 border rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                </div>
+
+                <textarea id="userPrompt" placeholder="Optional: Any specific instructions? (e.g., 'I need it for gaming')" class="w-full p-4 border rounded-lg bg-slate-50 mb-4 h-24 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"></textarea>
+                <button onclick="analyzeProduct()" class="w-full bg-indigo-600 text-white p-4 rounded-lg font-bold text-lg hover:bg-indigo-700 transition shadow-lg"><i class="fas fa-search mr-2"></i> Search & Analyze Market</button>
+            </div>
+
+            <div id="loader" class="hidden text-center py-8 text-indigo-600 font-bold animate-pulse">
+                <i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Searching web & analyzing deals...
+            </div>
+
+            <div id="results" class="hidden space-y-6">
+                <!-- Results cards injected here -->
+            </div>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="view-dashboard" class="hidden">
+            <h2 class="text-3xl font-bold mb-6 text-slate-700"><i class="fas fa-history mr-2"></i>Your Search History</h2>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-sm uppercase">
+                            <th class="p-4 border-b">Date</th>
+                            <th class="p-4 border-b">Product</th>
+                            <th class="p-4 border-b">Best Price Found</th>
+                            <th class="p-4 border-b">Store</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable" class="text-slate-700">
+                        <!-- History rows injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    // --- State Management ---
+    let token = localStorage.getItem('token');
+    
+    function init() {
+        if (token) {
+            document.getElementById('nav-auth').classList.add('hidden');
+            document.getElementById('nav-user').classList.remove('hidden');
+            showView('search');
+        } else {
+            document.getElementById('nav-auth').classList.remove('hidden');
+            document.getElementById('nav-user').classList.add('hidden');
+            showView('login');
+        }
+    }
+
+    function showView(viewId) {
+        ['view-login', 'view-register', 'view-search', 'view-dashboard'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+        document.getElementById(`view-${viewId}`).classList.remove('hidden');
+    }
+
+    // --- Authentication ---
+    async function handleLogin() {
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+        if(!username || !password) return alert('Fill all fields');
+
+        const res = await fetch(`/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            localStorage.setItem('token', data.token);
+            token = data.token;
+            init();
+        } else alert(data.error);
+    }
+
+    async function handleRegister() {
+        const username = document.getElementById('reg-username').value;
+        const password = document.getElementById('reg-password').value;
+        if(!username || !password) return alert('Fill all fields');
+
+        const res = await fetch(`/api/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            alert('Account created successfully! Please login.');
+            document.getElementById('reg-username').value = '';
+            document.getElementById('reg-password').value = '';
+            showView('login');
+        } else alert(data.error);
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        token = null;
+        init();
+    }
+
+    // --- Dashboard ---
+    async function loadDashboard() {
+        showView('dashboard');
+        const res = await fetch('/api/auth/history', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const history = await res.json();
+        
+        const tbody = document.getElementById('historyTable');
+        
+        if (!history || history.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">No search history found.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = history.map(item => `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-4">${new Date(item.date).toLocaleDateString()}</td>
+                <td class="p-4 font-semibold">${item.product_name}</td>
+                <td class="p-4 text-emerald-600 font-bold">₹${item.best_price || 'N/A'}</td>
+                <td class="p-4"><span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-1 rounded">${item.store || 'N/A'}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    // --- Search Logic ---
+    async function analyzeProduct() {
+        const inputQuery = document.getElementById('inputQuery').value.trim();
+        const isUrl = document.getElementById('isUrl').checked;
+        const userPrompt = document.getElementById('userPrompt').value.trim();
+        const category = document.getElementById('productCategory').value.trim();
+        const priceRange = document.getElementById('priceRange').value.trim();
+        
+        // Validation: Must provide either Product OR both Category and Price Range
+        if (!inputQuery && (!category || !priceRange)) {
+            return alert('Please enter either a Product Name/URL, OR fill in both Category and Price Range.');
+        }
+
+        document.getElementById('loader').classList.remove('hidden');
+        document.getElementById('results').classList.add('hidden');
+
+        try {
+            const response = await fetch('/api/products/evaluate', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ inputQuery, isUrl, userPrompt, category, priceRange })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                const deals = data.ai_recommendation.top_3_deals || [];
+                const verdictClass = data.ai_recommendation.buy_now ? 'bg-emerald-500' : 'bg-rose-500';
+                const verdictText = data.ai_recommendation.buy_now ? 'BUY NOW' : 'WAIT FOR SALE';
+
+                // Safe External URL Formatter
+                // Safe External URL Formatter & HTML Generator
+                const dealsHtml = deals.map((deal, index) => {
+                    let rawLink = deal.link ? String(deal.link).trim() : '';
+                    let targetLink = '#';
+                    let isLinkValid = false;
+
+                    if (rawLink && rawLink !== 'N/A' && rawLink !== 'null' && rawLink !== '#') {
+                        if (rawLink.startsWith('http://') || rawLink.startsWith('https://')) {
+                            targetLink = rawLink;
+                            isLinkValid = true;
+                        } else if (rawLink.startsWith('/')) {
+                            targetLink = 'https://www.google.com' + rawLink;
+                            isLinkValid = true;
+                        } else {
+                            targetLink = 'https://' + rawLink;
+                            isLinkValid = true;
+                        }
+                    }
+
+                    return `
+                        <div class="mb-5 pb-5 ${index !== deals.length - 1 ? 'border-b border-slate-200' : ''}">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <span class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-1 rounded mr-2">#${index + 1}</span>
+                                    <span class="font-bold text-slate-700 uppercase text-xs tracking-wider">${deal.store || 'Unknown Store'}</span>
+                                </div>
+                            </div>
+                            <!-- NEW: Displaying the actual item name -->
+                            <h4 class="text-sm font-semibold text-slate-800 mb-3 leading-snug">${deal.item_name || 'Product Details Unavailable'}</h4>
+                            
+                            <div class="flex justify-between items-end">
+                                <p class="text-2xl font-black text-emerald-600">₹${deal.price || 'N/A'}</p>
+                                ${isLinkValid 
+                                    ? `<a href="${targetLink}" target="_blank" rel="noopener noreferrer" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition bg-indigo-50 px-3 py-1 rounded-full">Go to Deal <i class="fas fa-external-link-alt ml-1"></i></a>`
+                                    : `<span class="text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">Link Unavailable</span>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('results').innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-emerald-500">
+                            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-4">🏆 Top Deals Found</h3>
+                            ${dealsHtml || '<p class="text-slate-500">No valid deals found matching your criteria.</p>'}
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-3">AI Analysis</h3>
+                            <span class="${verdictClass} text-white px-3 py-1 rounded font-bold text-xs mb-3 inline-block">${verdictText}</span>
+                            <p class="text-slate-700 leading-relaxed text-sm mt-2">${data.ai_recommendation.verdict}</p>
+                            <p class="text-xs text-slate-400 mt-4 text-right">Evaluated by: ${data.ai_recommendation.model_used}</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('results').classList.remove('hidden');
+            } else alert(data.error);
+        } catch (err) { 
+            alert('Failed to connect to backend.'); 
+        } finally { 
+            document.getElementById('loader').classList.add('hidden'); 
+        }
+    }
+
+    init(); // Run on page load
+</script>
+</body>
+</html>
